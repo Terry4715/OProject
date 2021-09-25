@@ -339,6 +339,8 @@ def get_info(character):
 def garage_work():
     action_points = get_action_points()
     illegal_cash = get_illegal_cash()
+    cars_to_dismantle = 0
+    offer_count = 0
 
     print("Started garage work")
     # default xpath_dismantle value assumes table count is two
@@ -820,22 +822,21 @@ def offer_cars(chop_shop="Moleone", car_count=0, car_level=0):
         print(f"Sent {car_count_tally} level {car_level} cars to {chop_shop}")
 
 
+def reset_ks_list():
+    global shots_taken
+    shots_taken = []
+    global kl_shots_taken
+    kl_shots_taken=[]
+    global no_ap_enemy
+    no_ap_enemy=[]
+    print(f"Shots taken list reset")
+
+
+no_ap_enemy=[]    # global var for tracking beat down enemies
+kl_shots_taken=[] # global var for tracking shots taken
+kill_list = ['Rodykle', 'Minusas', 'Tarpas', 'Kirvis'] # 'Chyteris', 'Pliusas', 'Anti-vaxxer', 'Privet andrei', 'Caps Lock', 'Petras', 'Easy', 'End', 'Hazard', 'puma'
+
 def whack_a_fool():
-    try:
-        driver.get("https://www.omertamafia.com/index2.php?bir=war")
-    except NoSuchElementException as exception:
-        print("Error handling: Element not found trying to get to war page")
-        return
-    time.sleep(4)
-
-    action_points = get_action_points()
-    illegal_cash = get_illegal_cash()
-
-    kill_list = [
-        "LaGuapita"
-    ]
-
-    shots = 0
 
     try:
         driver.get("https://www.omertamafia.com/index2.php?bir=war")
@@ -844,106 +845,245 @@ def whack_a_fool():
         return
     time.sleep(2)
 
-    for victim in kill_list:
-        try:
-            if action_points >= 20 and illegal_cash >= 20000:
-                try:
-                    driver.find_element_by_css_selector("input[type='radio'][value='1']").click()
-                    driver.find_element_by_name("dude").send_keys(victim)
-                    driver.find_element_by_name("dude").send_keys(Keys.RETURN)
-                except NoSuchElementException as exception:
-                    print(f"Error handling: Element not found trying to whack {victim}")
-                    return
-                time.sleep(2)
-                try:
-                    driver.switch_to.alert.accept()
-                except NoSuchElementException as exception:
-                    print(f"Error handling: Element not found trying to whack {victim} alert button")
-                    return
-                print(f"You shot at {victim}")
-                shots += 1
-                action_points = get_action_points()
-                illegal_cash = get_illegal_cash()
-                time.sleep(2)
+    action_points = get_action_points()
+    illegal_cash = get_illegal_cash()
+    
+    global kill_list    
 
-                # add post in forum code here
-                xpath_message = ("//table[contains(@class, 'main')]/tbody/tr\
-                                 /td[contains(@class, 'header_inside')]/div[3]")
-                if check_for_xpath(xpath_message):
+    try:
+        driver.get("https://www.omertamafia.com/index2.php?bir=war")
+    except NoSuchElementException as exception:
+        print("Error handling: Element not found trying to get to war page")
+        return
+    time.sleep(2)
+
+    random.shuffle(kill_list)
+
+
+
+    try:
+        xpath_bs_count = ("//table[contains(@class, 'main')]/tbody/tr\
+                                /td[contains(@class, 'header_inside')]\
+                                /table[contains(@class, 'list')]/tbody/tr/td/div[1]/ul/li")
+        bs_count = len(driver.find_elements_by_xpath(xpath_bs_count))
+    except NoSuchElementException as exception:
+        print("Error handling: Element not found trying to get bs count")
+        return
+
+    if bs_count >= 1:
+        for i, num in enumerate(range(bs_count)):
+
+            try:
+                bs_victim = driver.find_element_by_xpath(f"//table[contains(@class, 'main')]/tbody/tr\
+                                /td[contains(@class, 'header_inside')]\
+                                /table[contains(@class, 'list')]/tbody/tr/td/div[1]/ul/li[{i + 1}]").get_attribute("innerHTML")
+            except NoSuchElementException as exception:
+                print(f"Error handling: Element not found trying to find bs details")
+                return
+            v_target= bs_victim.split(' shot at')[0]
+            
+            # fire back shot
+
+            try: # try shooting fool
+                if action_points >= 20 and illegal_cash >= 20000:
                     try:
-                        message = driver.find_element_by_xpath(xpath_message).get_attribute("innerHTML")
+                        driver.find_element_by_css_selector("input[type='radio'][value='1']").click() # value 3 for beat
+                        driver.find_element_by_name("dude").send_keys(v_target)
+                        driver.find_element_by_name("dude").send_keys(Keys.RETURN)
                     except NoSuchElementException as exception:
-                        print(f"Error handling: Element not found trying to find message")
+                        print(f"Error handling: Element not found trying to bs {v_target}")
                         return
-                    print(message)
-                    time.sleep(31)
-                #
-                #     # posts failed attempt in family forum
-                #     if message == "Attempt failed":
-                #         # go to forum and post
-                #         try:
-                #             driver.get("https://www.omertamafia.com/index2.php?bir=thread&th=280&forid=2687")
-                #         except NoSuchElementException as exception:
-                #             print(f"Error handling: Element not found trying to get to forum page")
-                #             return
-                #         time.sleep(2)
-                #
-                #         xpath_forum_message = ("//table[contains(@class, 'main')]/tbody/tr\
-                #                                /td[contains(@class, 'header_inside')]\
-                #                                /table[1]/tbody/tr[2]/td/div/form/table/tbody/tr[1]/td/textarea")
-                #
-                #         xpath_forum_ok_button = ("//table[contains(@class, 'main')]/tbody/tr\
-                #                                  /td[contains(@class, 'header_inside')]\
-                #                                  /table[1]/tbody/tr[2]/td/div/form/table/tbody/tr[2]/td/input")
-                #
-                #         try:
-                #             driver.find_element_by_xpath(xpath_forum_message).send_keys(victim)
-                #             driver.find_element_by_xpath(xpath_forum_ok_button).click()
-                #         except NoSuchElementException as exception:
-                #             print(f"Error handling: Element not found trying to post message")
-                #             return
-                #         time.sleep(2)
-                #
-                #         try:
-                #             driver.get("https://www.omertamafia.com/index2.php?bir=war")
-                #         except NoSuchElementException as exception:
-                #             print("Error handling: Element not found trying to get back to war page")
-                #             return
-                #         time.sleep(2)
-                #     else:
-                #         continue
+                    time.sleep(2)
+                    try:
+                        driver.switch_to.alert.accept()
+                    except NoSuchElementException as exception:
+                        print(f"Error handling: Element not found trying to whack {v_target} alert button")
+                        return
+                    print(f"You backshot at {v_target}")
 
-                try:
-                    driver.find_element_by_css_selector("input[type='radio'][value='3']").click()
-                    driver.find_element_by_name("dude").send_keys(victim)
-                    driver.find_element_by_name("dude").send_keys(Keys.RETURN)
-                except NoSuchElementException as exception:
-                    print(f"Error handling: Element not found trying to beat {victim}")
-                    return
-                time.sleep(2)
-                try:
-                    driver.switch_to.alert.accept()
-                except NoSuchElementException as exception:
-                    print(f"Error handling: Element not found trying to beat {victim} alert button")
-                    return
-                print(f"You tried to beat {victim}")
+                    action_points = get_action_points()
+                    illegal_cash = get_illegal_cash()
+                    time.sleep(32)
+
+                    xpath_message = ("//table[contains(@class, 'main')]/tbody/tr\
+                                    /td[contains(@class, 'header_inside')]/div[3]")
+                    if check_for_xpath(xpath_message):
+                        try:
+                            message = driver.find_element_by_xpath(xpath_message).get_attribute("innerHTML")
+                        except NoSuchElementException as exception:
+                            print(f"Error handling: Element not found trying to find message")
+                            return
+                        print(message)
+
+                    elif driver.current_url == f"https://www.omertamafia.com/war_success.php?dude={v_target}":
+                        print(f"--------- YOU KILLED {v_target} ---------")
+                        kill_list.remove(v_target)
+                        
+                        try:
+                            driver.get("https://www.omertamafia.com/index2.php?bir=war")
+                        except NoSuchElementException as exception:
+                            print("Error handling: Element not found trying to get to war page")
+                            return
+                        time.sleep(2)
+
+                        action_points = get_action_points()
+                        illegal_cash = get_illegal_cash()
+                        continue
+                        
+                else:
+                    break
+            except:
+                print("Error handling: If statement break")
+                return
+
+
+    for victim in kill_list:
+        if victim in kl_shots_taken:
+            if victim in no_ap_enemy:
+                continue
             else:
-                break
-        except:
-            print("Error handling: If statement break")
-            return
+                # try beat twice
+                try:
+                    if action_points >= 40 and illegal_cash >= 40000: # change to 60ap once done beating and 30k
+                        try:
+                            driver.find_element_by_css_selector("input[type='radio'][value='3']").click() # value 3 for beat
+                            driver.find_element_by_name("dude").send_keys(victim)
+                            driver.find_element_by_name("dude").send_keys(Keys.RETURN)
+                        except NoSuchElementException as exception:
+                            print(f"Error handling: Element not found trying to beat {victim}")
+                            return
+                        time.sleep(2)
+                        try:
+                            driver.switch_to.alert.accept()
+                        except NoSuchElementException as exception:
+                            print(f"Error handling: Element not found trying to beat {victim} alert button")
+                            return
+                        print(f"You tried to beat {victim}")
+                        xpath_message = ("//table[contains(@class, 'main')]/tbody/tr\
+                                        /td[contains(@class, 'header_inside')]/div[3]")
+                        if check_for_xpath(xpath_message):
+                            try:
+                                message = driver.find_element_by_xpath(xpath_message).get_attribute("innerHTML")
+                            except NoSuchElementException as exception:
+                                print(f"Error handling: Element not found trying to find message")
+                                return
+                            print(message)
+                            
+                            enemy_ap = [int(s) for s in message.split() if s.isdigit()]
+                            if len(enemy_ap) > 0:
+                                if enemy_ap[0] <=11:
+                                    no_ap_enemy.append(victim)
+                                    continue
+                            
 
-    # print(f"Shot count is at {shots}")
+                        action_points = get_action_points()
+                        illegal_cash = get_illegal_cash()
+                        time.sleep(2)
+                    else:
+                        break
+
+                    if action_points >= 40 and illegal_cash >= 40000:
+                        try:
+                            driver.find_element_by_css_selector("input[type='radio'][value='3']").click() # value 3 for beat
+                            driver.find_element_by_name("dude").send_keys(victim)
+                            driver.find_element_by_name("dude").send_keys(Keys.RETURN)
+                        except NoSuchElementException as exception:
+                            print(f"Error handling: Element not found trying to beat {victim}")
+                            return
+                        time.sleep(2)
+                        try:
+                            driver.switch_to.alert.accept()
+                        except NoSuchElementException as exception:
+                            print(f"Error handling: Element not found trying to beat {victim} alert button")
+                            return
+                        print(f"You tried to beat {victim}")
+                        xpath_message = ("//table[contains(@class, 'main')]/tbody/tr\
+                                        /td[contains(@class, 'header_inside')]/div[3]")
+                        if check_for_xpath(xpath_message):
+                            try:
+                                message = driver.find_element_by_xpath(xpath_message).get_attribute("innerHTML")
+                            except NoSuchElementException as exception:
+                                print(f"Error handling: Element not found trying to find message")
+                                return
+                            print(message)
+                            enemy_ap = [int(s) for s in message.split() if s.isdigit()]
+                            if len(enemy_ap) > 0:
+                                if enemy_ap[0] <=11:
+                                    no_ap_enemy.append(victim)
+                                    continue
+
+                        action_points = get_action_points()
+                        illegal_cash = get_illegal_cash()
+                        time.sleep(2)
+                    else:
+                        break
+
+                except:
+                    print("Error handling: struggled beating someone")
+                    return
+
+        else:
+            try: # try shooting fool
+                if action_points >= 20 and illegal_cash >= 20000:
+                    try:
+                        driver.find_element_by_css_selector("input[type='radio'][value='1']").click() # value 3 for beat
+                        driver.find_element_by_name("dude").send_keys(victim)
+                        driver.find_element_by_name("dude").send_keys(Keys.RETURN)
+                    except NoSuchElementException as exception:
+                        print(f"Error handling: Element not found trying to whack {victim}")
+                        return
+                    time.sleep(2)
+                    try:
+                        driver.switch_to.alert.accept()
+                    except NoSuchElementException as exception:
+                        print(f"Error handling: Element not found trying to whack {victim} alert button")
+                        return
+                    print(f"You shot at {victim}")
+
+                    action_points = get_action_points()
+                    illegal_cash = get_illegal_cash()
+                    time.sleep(32)
+
+                    xpath_message = ("//table[contains(@class, 'main')]/tbody/tr\
+                                    /td[contains(@class, 'header_inside')]/div[3]")
+                    if check_for_xpath(xpath_message):
+                        try:
+                            message = driver.find_element_by_xpath(xpath_message).get_attribute("innerHTML")
+                        except NoSuchElementException as exception:
+                            print(f"Error handling: Element not found trying to find message")
+                            return
+                        print(message)
+                        if message == "Your target has recently survived whack attempt":
+                            kl_shots_taken.append(victim)
+                            # time.sleep(31)
+                        elif message == "Attempt failed":
+                            kl_shots_taken.append(victim)
+                            # time.sleep(31)
+                    elif driver.current_url == f"https://www.omertamafia.com/war_success.php?dude={victim}":
+                        print(f"--------- YOU KILLED {victim} ---------")
+                        kill_list.remove(victim)
+                        
+                        try:
+                            driver.get("https://www.omertamafia.com/index2.php?bir=war")
+                        except NoSuchElementException as exception:
+                            print("Error handling: Element not found trying to get to war page")
+                            return
+                        time.sleep(2)
+
+                        action_points = get_action_points()
+                        illegal_cash = get_illegal_cash()
+                        continue
+                        
+                else:
+                    break
+            except:
+                print("Error handling: If statement break")
+                return
+
     bribe_officials()
 
 
 shots_taken=[] # global var for tracking shots taken
-
-
-def reset_ks_list():
-    global shots_taken
-    shots_taken = []
-    print(f"Shots taken list reset: {shots_taken}")
 
 
 def shoot_for_ks():
@@ -1041,7 +1181,7 @@ def shoot_for_ks():
 
     if len(hitlist) == 0:
         print("There doesn't appear to be anyone to shoot at for ks...")
-        return
+        return(47)
 
     # shot at targets
     for target_name, target_rank, target_url in hitlist:
